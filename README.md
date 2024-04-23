@@ -3,7 +3,7 @@
 ## terraform version
 v1.8.0
 
-## 権限
+## AWS認証
 AWS Identity Center の権限セットを使う
 ```zsh
 aws sso login
