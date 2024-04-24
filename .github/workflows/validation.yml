@@ -1,0 +1,56 @@
+name: Terraform Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'env/**'
+      - 'target'
+    types: [opened, synchronize]
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.read_target_file.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.8.0
+
+      - name: Terraform Format
+        run: terraform fmt -check
+        working-directory: ${{ matrix.target }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ${{ matrix.target }}
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ${{ matrix.target }}
+
+      - name: Terraform Lint
+        run: tflint
+        working-directory: ${{ matrix.target }}
+
+  read_target_file:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read target file
+        id: target
+        run: |
+          targets=$(cat target | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=$targets" >> $GITHUB_OUTPUT
+    outputs:
+      matrix: ${{ steps.target.outputs.matrix }}
