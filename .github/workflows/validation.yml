@@ -6,11 +6,26 @@ on:
       - main
     paths:
       - 'env/**'
-      - 'target'
+      - 'target.txt'
     types: [opened, synchronize]
 
 jobs:
+  read_target_file:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read target file
+        id: target
+        run: |
+          targets=$(cat target.txt | grep -v "^#" | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=$targets" >> $GITHUB_OUTPUT
+    outputs:
+      matrix: ${{ steps.target.outputs.matrix }}
+
   validation:
+    needs: read_target_file
     runs-on: ubuntu-latest
 
     strategy:
@@ -18,12 +33,27 @@ jobs:
         target: ${{ fromJson(needs.read_target_file.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+          role-to-assume: arn:aws:iam::381491840465:role/ci
+          role-duration-seconds: 1800
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.8.0
+
+      - name: Install tflint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+      - name: Set tflint path
+        run: echo "$HOME/.tflint/bin" >> $GITHUB_PATH
 
       - name: Terraform Format
         run: terraform fmt -check
@@ -40,17 +70,3 @@ jobs:
       - name: Terraform Lint
         run: tflint
         working-directory: ${{ matrix.target }}
-
-  read_target_file:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Read target file
-        id: target
-        run: |
-          targets=$(cat target | jq -R -s -c 'split("\n")[:-1]')
-          echo "matrix=$targets" >> $GITHUB_OUTPUT
-    outputs:
-      matrix: ${{ steps.target.outputs.matrix }}
