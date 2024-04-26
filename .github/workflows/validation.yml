@@ -1,0 +1,108 @@
+name: Terraform Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'env/**'
+      - 'target.txt'
+    types: [opened, synchronize, labeled]
+
+jobs:
+  read_target_file:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read target file
+        id: target
+        run: |
+          targets=$(cat target.txt | grep -v "^#" | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=$targets" >> $GITHUB_OUTPUT
+    outputs:
+      matrix: ${{ steps.target.outputs.matrix }}
+
+  validation:
+    needs: read_target_file
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.read_target_file.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 1800
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.0
+
+      - name: Install tflint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+      - name: Set tflint path
+        run: echo "$HOME/.tflint/bin" >> $GITHUB_PATH
+
+      - name: Terraform Format
+        run: terraform fmt -check
+        working-directory: ${{ matrix.target }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ${{ matrix.target }}
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ${{ matrix.target }}
+
+      - name: Terraform Lint
+        run: tflint
+        working-directory: ${{ matrix.target }}
+
+  # run-planラベルがついている場合実施する
+  plan:
+    needs: [read_target_file, validation]
+    if: contains(github.event.pull_request.labels.*.name, 'run-plan')
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.read_target_file.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 1800
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.0
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ${{ matrix.target }}
+
+      - name: Terraform Plan
+        run: terraform plan
+        working-directory: ${{ matrix.target }}
+        continue-on-error: true
