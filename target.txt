@@ -1,2 +1,2 @@
-env/common/iam
-# env/common/dynamo
+env/common/s3
+env/common/dynamo
