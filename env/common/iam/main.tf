@@ -5,13 +5,42 @@ resource "aws_iam_user" "dev-admin" {
   name                 = "dev-admin"
   path                 = "/"
   permissions_boundary = null
-  tags = {}
-  tags_all = {}
+  tags                 = {}
+  tags_all             = {}
 }
 
 resource "aws_iam_user_policy_attachment" "dev-admin_access_attachment" {
   user       = aws_iam_user.dev-admin.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+###############################################################################
+# dev-user-1:
+###############################################################################
+resource "aws_iam_user" "dev-user-1" {
+  name                 = "dev-user-1"
+  path                 = "/"
+  permissions_boundary = null
+  tags                 = {}
+  tags_all             = {}
+}
+
+resource "aws_iam_group" "dev-power-users" {
+  name = "dev-power-users"
+  path = "/"
+}
+
+resource "aws_iam_group_policy_attachment" "dev-power-user-policy-attachment" {
+  group      = aws_iam_group.dev-power-users.name
+  policy_arn = "arn:aws:iam::aws:policy/PowerUserAccess"
+}
+
+resource "aws_iam_user_group_membership" "dev-power-user-membership" {
+  user = aws_iam_user.dev-user-1.name
+
+  groups = [
+    aws_iam_group.dev-power-users.name,
+  ]
 }
 
 ###############################################################################
@@ -21,8 +50,8 @@ resource "aws_iam_user" "ci" {
   name                 = "ci"
   path                 = "/"
   permissions_boundary = null
-  tags = {}
-  tags_all = {}
+  tags                 = {}
+  tags_all             = {}
 }
 
 resource "aws_iam_policy" "ci" {
@@ -30,7 +59,7 @@ resource "aws_iam_policy" "ci" {
   name        = "ci"
   name_prefix = null
   path        = "/"
-  policy      = jsonencode(
+  policy = jsonencode(
     {
       Statement = [
         {
@@ -42,25 +71,16 @@ resource "aws_iam_policy" "ci" {
             "lambda:*",
             "cloudwatch:*",
             "logs:*",
-          ]
-          Effect   = "Allow"
-          Resource = "*"
-        },
-        {
-          Action = [
             "iam:*",
           ]
           Effect   = "Allow"
-          Resource = [
-            "arn:aws:iam::*:user/ci",
-            "arn:aws:iam::*:user/dev-*",
-          ]
-        },
+          Resource = "*"
+        }
       ]
       Version = "2012-10-17"
     }
   )
-  tags = {}
+  tags     = {}
   tags_all = {}
 }
 
@@ -84,7 +104,7 @@ resource "aws_iam_role" "ci" {
   )
   description           = null
   force_detach_policies = false
-  managed_policy_arns   = [
+  managed_policy_arns = [
     aws_iam_policy.ci.arn,
   ]
   max_session_duration = 3600
@@ -92,6 +112,6 @@ resource "aws_iam_role" "ci" {
   name_prefix          = null
   path                 = "/"
   permissions_boundary = null
-  tags = {}
-  tags_all = {}
+  tags                 = {}
+  tags_all             = {}
 }
