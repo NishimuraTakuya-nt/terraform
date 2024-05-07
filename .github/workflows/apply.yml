@@ -18,7 +18,7 @@ jobs:
       - name: Read target file
         id: target
         run: |
-          targets=$(cat target.txt | grep -v "^#" | jq -R -s -c 'split("\n")[:-1]')
+          targets=$(cat target.txt | grep -v "^#" | awk '{print "{\"action\": \""$1"\", \"workdir\": \""$2"\"}"}' | jq -s -c)
           echo "matrix=$targets" >> $GITHUB_OUTPUT
     outputs:
       matrix: ${{ steps.target.outputs.matrix }}
@@ -50,18 +50,34 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ${{ matrix.target }}
+        working-directory: ${{ matrix.target.workdir }}
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
-        working-directory: ${{ matrix.target }}
+        run: |
+          if [ "${{ matrix.target.action }}" == "apply" ]; then
+            terraform plan -input=false
+          elif [ "${{ matrix.target.action }}" == "destroy" ]; then
+            terraform plan -destroy -input=false
+          else
+            echo "Invalid action: ${{ matrix.target.action }}"
+            exit 1
+          fi
+        working-directory: ${{ matrix.target.workdir }}
         continue-on-error: true
 
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        working-directory: ${{ matrix.target }}
+      - name: Terraform ${{ matrix.target.action }}
+        run: |
+          if [ "${{ matrix.target.action }}" == "apply" ]; then
+            terraform apply -auto-approve
+          elif [ "${{ matrix.target.action }}" == "destroy" ]; then
+            terraform destroy -auto-approve
+          else
+            echo "Invalid action: ${{ matrix.target.action }}"
+            exit 1
+          fi
+        working-directory: ${{ matrix.target.workdir }}

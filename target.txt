@@ -1,2 +1,2 @@
-env/common/s3
-env/common/dynamo
+destroy env/common/s3
+apply env/common/dynamo

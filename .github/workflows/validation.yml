@@ -19,7 +19,7 @@ jobs:
       - name: Read target file
         id: target
         run: |
-          targets=$(cat target.txt | grep -v "^#" | jq -R -s -c 'split("\n")[:-1]')
+          targets=$(cat target.txt | grep -v "^#" | awk '{print "{\"action\": \""$1"\", \"workdir\": \""$2"\"}"}' | jq -s -c)
           echo "matrix=$targets" >> $GITHUB_OUTPUT
     outputs:
       matrix: ${{ steps.target.outputs.matrix }}
@@ -57,19 +57,19 @@ jobs:
 
       - name: Terraform Format
         run: terraform fmt -check
-        working-directory: ${{ matrix.target }}
+        working-directory: ${{ matrix.target.workdir }}
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ${{ matrix.target }}
+        working-directory: ${{ matrix.target.workdir }}
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: ${{ matrix.target }}
+        working-directory: ${{ matrix.target.workdir }}
 
       - name: Terraform Lint
         run: tflint
-        working-directory: ${{ matrix.target }}
+        working-directory: ${{ matrix.target.workdir }}
 
   # run-planラベルがついている場合実施する
   plan:
@@ -100,12 +100,20 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ${{ matrix.target }}
+        working-directory: ${{ matrix.target.workdir }}
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan
-        working-directory: ${{ matrix.target }}
+        run: |
+          if [ "${{ matrix.target.action }}" == "apply" ]; then
+            terraform plan -input=false
+          elif [ "${{ matrix.target.action }}" == "destroy" ]; then
+            terraform plan -destroy -input=false
+          else
+            echo "Invalid action: ${{ matrix.target.action }}"
+            exit 1
+          fi
+        working-directory: ${{ matrix.target.workdir }}
         continue-on-error: true
 
       - uses: actions/github-script@v6
@@ -114,7 +122,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### Terraform Plan 📖 ${{ matrix.target }} \`${{ steps.plan.outcome }}\`
+            const output = `#### Terraform Plan 📖 (${{ matrix.target.action }}) ${{ matrix.target.workdir }} \`${{ steps.plan.outcome }}\`
 
             <details><summary>Show Plan</summary>
 
