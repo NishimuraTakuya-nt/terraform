@@ -42,3 +42,11 @@ module "private_subnet_2" {
   availability_zone = "ap-northeast-1c"
   subnet_name       = "n-plant-dev-private-1c"
 }
+
+# IGW
+module "igw" {
+  source = "../../../modules/network/internet_gateway"
+
+  vpc_id = module.vpc.vpc_id
+  igw_name = "n-plant-dev-igw"
+}
