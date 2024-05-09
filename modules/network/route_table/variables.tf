@@ -15,3 +15,8 @@ variable "nat_gateway_id" {
   type = string
   default = ""
 }
+
+variable "subnet_id" {
+  type        = string
+  description = "subnet ID"
+}
