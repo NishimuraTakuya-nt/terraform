@@ -50,3 +50,11 @@ module "igw" {
   vpc_id = module.vpc.vpc_id
   igw_name = "n-plant-dev-igw"
 }
+
+# Nat Gateway
+module "nat_gateway" {
+  source = "../../../modules/network/nat_gateway"
+
+  subnet_id   = module.public_subnet_1.subnet_id
+  nat_gateway_name = "n-plant-dev-ngw"
+}
