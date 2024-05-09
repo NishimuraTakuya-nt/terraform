@@ -58,3 +58,20 @@ module "nat_gateway" {
   subnet_id   = module.public_subnet_1.subnet_id
   nat_gateway_name = "n-plant-dev-ngw"
 }
+
+# Route Table
+module "public_route_table" {
+  source = "../../../modules/network/route_table"
+
+  vpc_id         = module.vpc.vpc_id
+  route_table_name = "n-plant-dev-public-1a-rt"
+  igw_id         = module.igw.igw_id
+}
+
+module "private_route_table" {
+  source = "../../../modules/network/route_table"
+
+  vpc_id         = module.vpc.vpc_id
+  route_table_name = "n-plant-dev-private-1a-rt"
+  nat_gateway_id = module.nat_gateway.nat_gateway_id
+}
