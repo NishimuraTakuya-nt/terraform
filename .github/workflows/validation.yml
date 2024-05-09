@@ -104,6 +104,8 @@ jobs:
 
       - name: Terraform Plan
         id: plan
+        env:
+          TF_CLI_FORCE_STDOUT: true
         run: |
           if [ "${{ matrix.target.action }}" == "apply" ]; then
             terraform plan -input=false
