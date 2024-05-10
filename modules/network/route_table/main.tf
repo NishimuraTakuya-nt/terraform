@@ -21,3 +21,8 @@ resource "aws_route" "nat_gateway" {
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = var.nat_gateway_id
 }
+
+resource "aws_route_table_association" "main" {
+  subnet_id      = var.subnet_id
+  route_table_id = aws_route_table.main.id
+}
