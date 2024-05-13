@@ -8,5 +8,5 @@ resource "aws_nat_gateway" "main" {
 }
 
 resource "aws_eip" "nat" {
-  vpc = true
+  domain = "vpc"
 }
