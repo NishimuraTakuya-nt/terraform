@@ -1,4 +1,4 @@
 # destroy env/common/s3
 # apply env/common/dynamo
-destroy env/dev/vpc
+apply env/dev/vpc
 # apply env/dev/api_test
