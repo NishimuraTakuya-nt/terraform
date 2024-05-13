@@ -7,7 +7,6 @@ repos:
         args:
           - --args=-no-color
           - --args=-diff
-#          - --args=-write=false
 #      - id: terraform_validate
       - id: terraform_tflint
         args: [" --recursive"]
