@@ -23,3 +23,9 @@ variable "associate_public_ip_address" {
   default     = false
   description = "Associate a public IP address with the EC2 instance"
 }
+
+variable "key_pair_key_name" {
+  type        = string
+  default     = null
+  description = "The name of the key pair to use for the EC2 instance"
+}

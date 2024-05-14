@@ -41,6 +41,11 @@ module "ec2_security_group_private" {
   ]
 }
 
+data "aws_ssm_parameter" "ssm_key_name" {
+  name            = "/dev/public-ec2-key-pairs"
+  with_decryption = true
+}
+
 # EC2
 module "ec2_public" {
   source = "../../../modules/compute/ec2"
@@ -51,6 +56,7 @@ module "ec2_public" {
   subnet_id                   = data.terraform_remote_state.vpc.outputs.public_subnet_id_1
   vpc_security_group_ids      = [module.ec2_security_group_public.security_group_id]
   associate_public_ip_address = true
+  key_pair_key_name           = data.aws_ssm_parameter.ssm_key_name.value
 }
 
 module "ec2_private" {
