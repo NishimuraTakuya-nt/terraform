@@ -72,6 +72,7 @@ resource "aws_iam_policy" "ci" {
             "cloudwatch:*",
             "logs:*",
             "iam:*",
+            "ssm:GetParameter",
           ]
           Effect   = "Allow"
           Resource = "*"
