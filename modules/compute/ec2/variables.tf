@@ -29,3 +29,15 @@ variable "key_pair_key_name" {
   default     = null
   description = "The name of the key pair to use for the EC2 instance"
 }
+
+variable "iam_instance_profile" {
+  type        = string
+  default     = null
+  description = "The IAM instance profile to associate with the EC2 instance"
+}
+
+variable "user_data" {
+  type        = string
+  default     = null
+  description = "The user data to provide when launching the EC2 instance for public subnet instances"
+}

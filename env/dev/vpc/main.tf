@@ -51,7 +51,7 @@ module "igw" {
   igw_name = "n-plant-dev-igw"
 }
 
-# Nat Gateway
+# Nat Gateway # fixme 費用がかかるので、適先削除する
 module "nat_gateway" {
   source = "../../../modules/network/nat_gateway"
 
@@ -69,7 +69,7 @@ module "route_tables" {
     "n-plant-dev-private-1a-rt"
   ]
   igw_id         = module.igw.igw_id
-  nat_gateway_id = module.nat_gateway.nat_gateway_id
+  nat_gateway_id = module.nat_gateway.nat_gateway_id # fixme 費用がかかるので、適先削除する
   subnet_ids = [
     module.public_subnet_1.subnet_id,
     module.private_subnet_1.subnet_id

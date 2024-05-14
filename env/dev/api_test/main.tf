@@ -1,4 +1,4 @@
-# VPC state ファイルの読み込み
+# VPC remote state ファイルの読み込み
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
@@ -41,9 +41,71 @@ module "ec2_security_group_private" {
   ]
 }
 
+# IAM Role for EC2
+resource "aws_iam_role" "ssm" {
+  name = "ssm"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_policy_attachment" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  role       = aws_iam_role.ssm.name
+}
+
+resource "aws_iam_role_policy" "ssm_inline_policy" {
+  name = "ssm-inline-policy"
+  role = aws_iam_role.ssm.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:StartSession",
+          "ssm:TerminateSession"
+        ]
+        Resource = [
+          "arn:aws:ec2:*:*:instance/*",
+          "arn:aws:ssm:*:*:managed-instance/*",
+          "arn:aws:ssm:*:*:document/SSM-SessionManagerRunShell",
+          "arn:aws:ssm:*:*:session/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "ssm_instance_profile" {
+  name = "ssm-instance-profile"
+  role = aws_iam_role.ssm.name
+}
+
+
+# パラメータストアから EC2 キーペアを取得
 data "aws_ssm_parameter" "ssm_key_name" {
   name            = "/dev/public-ec2-key-pairs"
   with_decryption = true
+}
+
+## User Data session-manager-plugin のインストール
+locals {
+  user_data = <<-EOF
+    #!/bin/bash
+    sudo yum install -y https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm
+  EOF
 }
 
 # EC2
@@ -57,6 +119,8 @@ module "ec2_public" {
   vpc_security_group_ids      = [module.ec2_security_group_public.security_group_id]
   associate_public_ip_address = true
   key_pair_key_name           = data.aws_ssm_parameter.ssm_key_name.value
+  iam_instance_profile        = aws_iam_instance_profile.ssm_instance_profile.name
+  user_data                   = local.user_data
 }
 
 module "ec2_private" {
@@ -67,4 +131,5 @@ module "ec2_private" {
   ami_id                 = "ami-0ab3794db9457b60a"
   subnet_id              = data.terraform_remote_state.vpc.outputs.private_subnet_id_1
   vpc_security_group_ids = [module.ec2_security_group_private.security_group_id]
+  iam_instance_profile   = aws_iam_instance_profile.ssm_instance_profile.name
 }
