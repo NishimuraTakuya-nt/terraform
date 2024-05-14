@@ -21,6 +21,18 @@ module "ec2_security_group_public" {
       to_port     = 22
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
     }
   ]
 }
@@ -100,11 +112,15 @@ data "aws_ssm_parameter" "ssm_key_name" {
   with_decryption = true
 }
 
-## User Data session-manager-plugin のインストール
+## User Data session-manager-plugin, Nginx のインストール
 locals {
   user_data = <<-EOF
     #!/bin/bash
     sudo yum install -y https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm
+    sudo yum update -y
+    sudo yum install nginx -y
+    sudo systemctl start nginx
+    sudo systemctl enable nginx
   EOF
 }
 
