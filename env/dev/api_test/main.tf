@@ -49,6 +49,18 @@ module "ec2_security_group_private" {
       to_port     = 22
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port       = 80
+      to_port         = 80
+      protocol        = "tcp"
+      security_groups = [module.ec2_security_group_public.security_group_id]
+    },
+    {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"] # todo 一旦解放
     }
   ]
 }
@@ -112,16 +124,17 @@ data "aws_ssm_parameter" "ssm_key_name" {
   with_decryption = true
 }
 
-## User Data session-manager-plugin, Nginx のインストール
-locals {
-  user_data = <<-EOF
-    #!/bin/bash
-    sudo yum install -y https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm
-    sudo yum update -y
-    sudo yum install nginx -y
-    sudo systemctl start nginx
-    sudo systemctl enable nginx
-  EOF
+## User Data
+data "template_file" "public_user_data" {
+  template = file("${path.module}/public_user_data.sh")
+
+  vars = {
+    private_instance_ip = module.ec2_private.private_ip
+  }
+}
+
+data "template_file" "private_user_data" {
+  template = file("${path.module}/private_user_data.sh")
 }
 
 # EC2
@@ -136,7 +149,7 @@ module "ec2_public" {
   associate_public_ip_address = true
   key_pair_key_name           = data.aws_ssm_parameter.ssm_key_name.value
   iam_instance_profile        = aws_iam_instance_profile.ssm_instance_profile.name
-  user_data                   = local.user_data
+  user_data                   = data.template_file.public_user_data.rendered
 }
 
 module "ec2_private" {
@@ -148,4 +161,5 @@ module "ec2_private" {
   subnet_id              = data.terraform_remote_state.vpc.outputs.private_subnet_id_1
   vpc_security_group_ids = [module.ec2_security_group_private.security_group_id]
   iam_instance_profile   = aws_iam_instance_profile.ssm_instance_profile.name
+  user_data              = data.template_file.private_user_data.rendered
 }
