@@ -73,6 +73,21 @@ resource "aws_iam_policy" "ci" {
             "logs:*",
             "iam:*",
             "ssm:GetParameter",
+            "route53:GetHostedZone",
+            "route53:ListHostedZones",
+            "route53:CreateHostedZone",
+            "route53:DeleteHostedZone",
+            "route53:UpdateHostedZoneComment",
+            "route53:ListTagsForResource",
+            "route53:ChangeResourceRecordSets",
+            "route53:ListResourceRecordSets",
+            "route53:GetChange",
+            "route53:GetHealthCheck",
+            "route53:CreateHealthCheck",
+            "route53:UpdateHealthCheck",
+            "route53:DeleteHealthCheck",
+            "route53:ListHealthChecks",
+            "sns:*",
           ]
           Effect   = "Allow"
           Resource = "*"

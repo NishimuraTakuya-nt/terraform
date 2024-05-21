@@ -1,4 +1,7 @@
 # destroy env/common/s3
 # apply env/common/dynamo
-apply env/dev/api_test
+apply env/common/iam
+# apply env/dev/api_test
 # apply env/dev/vpc
+# apply env/common/route53
+apply env/dev/monitoring/route53_health_check
