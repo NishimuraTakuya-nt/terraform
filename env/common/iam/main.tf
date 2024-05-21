@@ -87,6 +87,7 @@ resource "aws_iam_policy" "ci" {
             "route53:UpdateHealthCheck",
             "route53:DeleteHealthCheck",
             "route53:ListHealthChecks",
+            "sns:*",
           ]
           Effect   = "Allow"
           Resource = "*"
