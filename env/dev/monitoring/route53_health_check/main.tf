@@ -1,17 +1,7 @@
-# dev/route53 remote state ファイルの読み込み
-data "terraform_remote_state" "dev_route53" {
-  backend = "s3"
-  config = {
-    bucket = "wnt-terraform-state"
-    key    = "env/dev/route53/terraform.tfstate"
-    region = "ap-northeast-1"
-  }
-}
-
 module "dev1_health_check" {
   source = "../../../../modules/network/route53/health_check"
 
-  fqdn              = data.terraform_remote_state.dev_route53.outputs.dev1_record_fqdn
+  fqdn              = "dev1.n-tech-plant.com"
   port              = 80
   type              = "HTTP"
   resource_path     = "/"
