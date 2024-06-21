@@ -87,7 +87,17 @@ resource "aws_iam_policy" "ci" {
             "route53:UpdateHealthCheck",
             "route53:DeleteHealthCheck",
             "route53:ListHealthChecks",
+            "route53:ChangeTagsForResource",
             "sns:*",
+            "acm:RequestCertificate",
+            "acm:DescribeCertificate",
+            "acm:ListCertificates",
+            "acm:DeleteCertificate",
+            "cloudfront:CreateDistribution",
+            "cloudfront:GetDistribution",
+            "cloudfront:UpdateDistribution",
+            "cloudfront:DeleteDistribution",
+            "cloudfront:TagResource",
           ]
           Effect   = "Allow"
           Resource = "*"
