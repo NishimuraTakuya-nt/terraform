@@ -4,7 +4,7 @@ provider "aws" {
   default_tags {
     tags = {
       ManagedBy = "Terraform"
-      Project   = "create network"
+      Project   = "create DNS route"
       Env       = "dev"
     }
   }
