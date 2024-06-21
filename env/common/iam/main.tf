@@ -93,11 +93,18 @@ resource "aws_iam_policy" "ci" {
             "acm:DescribeCertificate",
             "acm:ListCertificates",
             "acm:DeleteCertificate",
+            "acm:ListTagsForCertificate",
             "cloudfront:CreateDistribution",
             "cloudfront:GetDistribution",
             "cloudfront:UpdateDistribution",
             "cloudfront:DeleteDistribution",
             "cloudfront:TagResource",
+            "cloudfront:CreateOriginAccessControl",
+            "cloudfront:GetOriginAccessControl",
+            "cloudfront:UpdateOriginAccessControl",
+            "cloudfront:DeleteOriginAccessControl",
+            "cloudfront:ListOriginAccessControls",
+            "cloudfront:ListTagsForResource",
           ]
           Effect   = "Allow"
           Resource = "*"
