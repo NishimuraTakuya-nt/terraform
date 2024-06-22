@@ -105,6 +105,20 @@ resource "aws_iam_policy" "ci" {
             "cloudfront:DeleteOriginAccessControl",
             "cloudfront:ListOriginAccessControls",
             "cloudfront:ListTagsForResource",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchGetImage",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:PutImage",
+            "ecr:InitiateLayerUpload",
+            "ecr:UploadLayerPart",
+            "ecr:CompleteLayerUpload",
+            "ecr:DescribeRepositories",
+            "ecr:ListTagsForResource",
+            "ecr:TagResource",
+            "ecr:GetLifecyclePolicy",
+            "ecr:PutLifecyclePolicy",
+            "ecr:GetRepositoryPolicy",
+            "ecr:SetRepositoryPolicy",
           ]
           Effect   = "Allow"
           Resource = "*"
