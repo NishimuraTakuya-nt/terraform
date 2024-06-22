@@ -114,6 +114,9 @@ resource "aws_iam_policy" "ci" {
             "ecr:CompleteLayerUpload",
             "ecr:DescribeRepositories",
             "ecr:ListTagsForResource",
+            "ecr:TagResource",
+            "ecr:PutLifecyclePolicy",
+            "ecr:GetLifecyclePolicy",
           ]
           Effect   = "Allow"
           Resource = "*"
