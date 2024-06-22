@@ -117,6 +117,7 @@ resource "aws_iam_policy" "ci" {
             "ecr:TagResource",
             "ecr:PutLifecyclePolicy",
             "ecr:GetLifecyclePolicy",
+            "ecr:SetRepositoryPolicy",
           ]
           Effect   = "Allow"
           Resource = "*"
