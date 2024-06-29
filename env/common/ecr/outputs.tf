@@ -1,4 +1,4 @@
 output "repository_url" {
+  value       = module.n-tech-go-echo.repository_url
   description = "URL of the ECR repository"
-  value       = aws_ecr_repository.main.repository_url
 }

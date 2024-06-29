@@ -120,6 +120,7 @@ resource "aws_iam_policy" "ci" {
             "ecr:GetRepositoryPolicy",
             "ecr:SetRepositoryPolicy",
             "ecr:DeleteRepositoryPolicy",
+            "ecs:*",
           ]
           Effect   = "Allow"
           Resource = "*"
