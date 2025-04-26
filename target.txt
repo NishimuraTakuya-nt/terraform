@@ -8,4 +8,4 @@
 # apply env/dev/route53
 # apply env/common/ecr
 # apply env/dev/api_test_ecs_v1
-apply env/dev/vpc
+apply env/dev/api_test
